@@ -1,0 +1,80 @@
+{
+    "description": "Baseline schema for Qualys AWS Connectors API - INTENTIONALLY OUTDATED for CARE testing",
+    "endpoint": "/cloudview-api/rest/v1/aws/connectors",
+    "version": "1.0.0",
+    "response_schema": {
+        "content": [
+            {
+                "name": "string",
+                "connector_id": "string",
+                "description": "string",
+                "provider": "string",
+                "status": "string",
+                "total_assets": "integer",
+                "last_synced_on": "string",
+                "is_gov_cloud": "boolean",
+                "is_china_region": "boolean",
+                "aws_account_id": "string",
+                "is_disabled": "boolean",
+                "polling_frequency": {
+                    "hours": "integer",
+                    "minutes": "integer"
+                },
+                "error": "string",
+                "base_account_id": "string",
+                "external_id": "string",
+                "arn": "string"
+            }
+        ],
+        "pageable": {
+            "page_number": "integer",
+            "page_size": "integer",
+            "sort": {
+                "sorted": "boolean",
+                "empty": "boolean",
+                "unsorted": "boolean"
+            },
+            "offset": "integer",
+            "paged": "boolean",
+            "unpaged": "boolean"
+        },
+        "total_pages": "integer",
+        "total_elements": "integer",
+        "last": "boolean",
+        "number": "integer",
+        "size": "integer",
+        "number_of_elements": "integer",
+        "sort": {
+            "sorted": "boolean",
+            "empty": "boolean",
+            "unsorted": "boolean"
+        },
+        "first": "boolean",
+        "empty": "boolean"
+    },
+    "field_mapping_notes": {
+        "intentional_differences": [
+            "connector_id -> connectorId (actual API uses camelCase)",
+            "status -> state (field renamed in actual API)",
+            "total_assets -> totalAssets (actual API uses camelCase)",
+            "last_synced_on -> lastSyncedOn (actual API uses camelCase)",
+            "MISSING: nextSyncedOn (new field in actual API)",
+            "MISSING: remediationEnabled (new field in actual API)",
+            "MISSING: qualysTags (new field in actual API)",
+            "MISSING: portalConnectorUuid (new field in actual API)",
+            "MISSING: isPortalConnector (new field in actual API)",
+            "is_gov_cloud -> isGovCloud (actual API uses camelCase)",
+            "is_china_region -> isChinaRegion (actual API uses camelCase)",
+            "aws_account_id -> awsAccountId (actual API uses camelCase)",
+            "is_disabled -> isDisabled (actual API uses camelCase)",
+            "polling_frequency -> pollingFrequency (actual API uses camelCase)",
+            "base_account_id -> baseAccountId (actual API uses camelCase)",
+            "external_id -> externalId (actual API uses camelCase)",
+            "page_number -> pageNumber (actual API uses camelCase)",
+            "page_size -> pageSize (actual API uses camelCase)",
+            "total_pages -> totalPages (actual API uses camelCase)",
+            "total_elements -> totalElements (actual API uses camelCase)",
+            "number_of_elements -> numberOfElements (actual API uses camelCase)"
+        ]
+    }
+}
