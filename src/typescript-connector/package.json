@@ -1,0 +1,28 @@
+{
+    "name": "qualys-aws-connector-typescript",
+    "version": "1.0.0",
+    "description": "TypeScript connector for Qualys CloudView AWS Connectors API - CARE Test Repository",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "npm run build && node dist/index.js",
+        "dev": "ts-node src/index.ts"
+    },
+    "keywords": [
+        "qualys",
+        "aws",
+        "connector",
+        "care"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^1.6.0",
+        "dotenv": "^16.3.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "ts-node": "^10.9.0",
+        "typescript": "^5.3.0"
+    }
+}
