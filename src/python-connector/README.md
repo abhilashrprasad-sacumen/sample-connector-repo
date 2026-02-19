@@ -93,7 +93,7 @@ for conn in response.connectors:
     print(f"Status: {conn.status}")  # Note: Uses 'status' but API returns 'state'
 ```
 
-## CARE Testing Workflow
+## CARE Testing Workflow 
 
 1. CARE monitors the endpoint: `https://qualysguard.qg2.apps.qualys.eu/cloudview-api/rest/v1/aws/connectors`
 2. CARE compares the actual API response against `baseline_schema.json`
