@@ -39,7 +39,7 @@ class PollingFrequency:
 class AWSConnector:
     """
     Data class representing an AWS Connector from Qualys.
-    
+
     NOTE: This model is based on the BASELINE SCHEMA which has intentional
     differences from the actual API response for CARE testing purposes.
     """
@@ -70,38 +70,41 @@ class AWSConnector:
 @dataclass
 class PaginationInfo:
     """Pagination information from API response."""
-    page_number: int  # Actual API field: pageNumber
-    page_size: int  # Actual API field: pageSize
-    total_pages: int  # Actual API field: totalPages
-    total_elements: int  # Actual API field: totalElements
-    number_of_elements: int  # Actual API field: numberOfElements
+    size: int
+    content: List[AWSConnector]
+    first: bool
+    number: int
+    sort: Any
+    empty: bool
+    totalPages: int
+    totalElements: int
+    last: bool
+    pageable: Any
+    numberOfElements: int
 
 
 @dataclass
 class ConnectorResponse:
     """Complete response from the AWS Connectors API."""
-    connectors: List[AWSConnector]
+    content: List[AWSConnector]
     pagination: PaginationInfo
-    is_first: bool
-    is_last: bool
-    is_empty: bool
 
 
 class QualysAWSConnector:
     """
     Connector for Qualys CloudView AWS Connectors API.
-    
+
     This connector fetches AWS connector information using Basic Authentication.
     It maps API response fields based on the BASELINE SCHEMA which intentionally
     differs from the actual API response for CARE testing purposes.
     """
-    
+
     ENDPOINT = "/cloudview-api/rest/v1/aws/connectors"
-    
+
     def __init__(self, config: Optional[QualysAuthConfig] = None):
         """
         Initialize the connector with authentication configuration.
-        
+
         Args:
             config: QualysAuthConfig instance. If None, uses default config from env vars.
         """
@@ -110,15 +113,15 @@ class QualysAWSConnector:
         self.session = requests.Session()
         self.session.auth = self.config.get_auth_tuple()
         self.session.verify = self.config.verify_ssl
-        
+
     def _build_url(self, endpoint: str) -> str:
         """Build full URL from base URL and endpoint."""
         return f"{self.config.base_url.rstrip('/')}{endpoint}"
-    
+
     def _parse_polling_frequency(self, data: Dict[str, Any]) -> PollingFrequency:
         """
         Parse polling frequency from API response.
-        
+
         Uses baseline schema field names (snake_case) but actual API returns camelCase.
         """
         # NOTE: Baseline schema expects 'polling_frequency' but API returns 'pollingFrequency'
@@ -127,11 +130,11 @@ class QualysAWSConnector:
             hours=freq_data.get("hours", 0),
             minutes=freq_data.get("minutes", 0)
         )
-    
+
     def _parse_connector(self, data: Dict[str, Any]) -> AWSConnector:
         """
         Parse a single connector from API response.
-        
+
         IMPORTANT: This method uses BASELINE SCHEMA field mappings which differ
         from the actual API response. CARE should detect and fix these mismatches.
         """
@@ -169,38 +172,38 @@ class QualysAWSConnector:
             # - portalConnectorUuid
             # - isPortalConnector
         )
-    
+
     def _parse_pagination(self, data: Dict[str, Any]) -> PaginationInfo:
         """
         Parse pagination information from API response.
-        
+
         Uses baseline schema field names which differ from actual API response.
         """
-        pageable = data.get("pageable", {})
         return PaginationInfo(
-            # Using 'page_number' but API returns 'pageNumber'
-            page_number=pageable.get("page_number", pageable.get("pageNumber", 0)),
-            # Using 'page_size' but API returns 'pageSize'
-            page_size=pageable.get("page_size", pageable.get("pageSize", 0)),
-            # Using 'total_pages' but API returns 'totalPages'
-            total_pages=data.get("total_pages", data.get("totalPages", 0)),
-            # Using 'total_elements' but API returns 'totalElements'
-            total_elements=data.get("total_elements", data.get("totalElements", 0)),
-            # Using 'number_of_elements' but API returns 'numberOfElements'
-            number_of_elements=data.get("number_of_elements", data.get("numberOfElements", 0))
+            size=data.get("size", 0),
+            content=[self._parse_connector(c) for c in data.get("content", [])],
+            first=data.get("first", True),
+            number=data.get("number", 0),
+            sort=data.get("sort", None),
+            empty=data.get("empty", False),
+            totalPages=data.get("totalPages", 0),
+            totalElements=data.get("totalElements", 0),
+            last=data.get("last", True),
+            pageable=data.get("pageable", None),
+            numberOfElements=data.get("numberOfElements", 0)
         )
-    
+
     def fetch_connectors(self, page: int = 0, page_size: int = 50) -> ConnectorResponse:
         """
         Fetch AWS connectors from Qualys CloudView API.
-        
+
         Args:
             page: Page number (0-indexed)
             page_size: Number of items per page
-            
+
         Returns:
             ConnectorResponse containing list of connectors and pagination info
-            
+
         Raises:
             requests.RequestException: If API call fails
             ValueError: If response cannot be parsed
@@ -210,9 +213,9 @@ class QualysAWSConnector:
             "pageNo": page,
             "pageSize": page_size
         }
-        
+
         logger.info(f"Fetching AWS connectors from {url}")
-        
+
         try:
             response = self.session.get(
                 url,
@@ -220,61 +223,56 @@ class QualysAWSConnector:
                 timeout=self.config.timeout
             )
             response.raise_for_status()
-            
+
             data = response.json()
             logger.info(f"Successfully fetched {len(data.get('content', []))} connectors")
-            
+
             return self._parse_response(data)
-            
+
         except requests.RequestException as e:
             logger.error(f"Failed to fetch connectors: {e}")
             raise
         except (KeyError, ValueError) as e:
             logger.error(f"Failed to parse response: {e}")
             raise ValueError(f"Invalid API response format: {e}")
-    
+
     def _parse_response(self, data: Dict[str, Any]) -> ConnectorResponse:
         """Parse full API response into ConnectorResponse object."""
-        content = data.get("content", [])
-        connectors = [self._parse_connector(c) for c in content]
         pagination = self._parse_pagination(data)
-        
+
         return ConnectorResponse(
-            connectors=connectors,
-            pagination=pagination,
-            is_first=data.get("first", True),
-            is_last=data.get("last", True),
-            is_empty=data.get("empty", False)
+            content=pagination.content,
+            pagination=pagination
         )
-    
+
     def get_all_connectors(self) -> List[AWSConnector]:
         """
         Fetch all AWS connectors, handling pagination automatically.
-        
+
         Returns:
             List of all AWSConnector objects
         """
         all_connectors = []
         page = 0
-        
+
         while True:
             response = self.fetch_connectors(page=page)
-            all_connectors.extend(response.connectors)
-            
-            if response.is_last:
+            all_connectors.extend(response.content)
+
+            if response.pagination.last:
                 break
             page += 1
-        
+
         logger.info(f"Fetched total of {len(all_connectors)} connectors")
         return all_connectors
-    
+
     def get_connector_by_id(self, connector_id: str) -> Optional[AWSConnector]:
         """
         Find a specific connector by its ID.
-        
+
         Args:
             connector_id: The connector UUID to search for
-            
+
         Returns:
             AWSConnector if found, None otherwise
         """
@@ -283,11 +281,11 @@ class QualysAWSConnector:
             if connector.connector_id == connector_id:
                 return connector
         return None
-    
+
     def to_normalized_dict(self, connector: AWSConnector) -> Dict[str, Any]:
         """
         Convert connector to normalized dictionary format.
-        
+
         This uses the BASELINE SCHEMA field names (snake_case) which differ
         from the actual API response (camelCase). CARE should detect this mismatch.
         """
@@ -320,18 +318,18 @@ def main():
     try:
         # Initialize connector (will use environment variables for auth)
         connector = QualysAWSConnector()
-        
+
         # Fetch connectors
         response = connector.fetch_connectors()
-        
+
         print(f"\n{'='*60}")
         print("QUALYS AWS CONNECTORS")
         print(f"{'='*60}")
-        print(f"Total Connectors: {response.pagination.total_elements}")
-        print(f"Page: {response.pagination.page_number + 1} of {response.pagination.total_pages}")
+        print(f"Total Connectors: {response.pagination.totalElements}")
+        print(f"Page: {response.pagination.number + 1} of {response.pagination.totalPages}")
         print(f"{'='*60}\n")
-        
-        for conn in response.connectors:
+
+        for conn in response.content:
             print(f"Name: {conn.name}")
             print(f"  Connector ID: {conn.connector_id}")
             print(f"  Provider: {conn.provider}")
@@ -342,15 +340,15 @@ def main():
             print(f"  Is Disabled: {conn.is_disabled}")
             print(f"  ARN: {conn.arn}")
             print()
-        
+
         # Export as normalized dict (using baseline schema field names)
         print(f"\n{'='*60}")
         print("NORMALIZED OUTPUT (Baseline Schema Format)")
         print(f"{'='*60}")
-        for conn in response.connectors:
+        for conn in response.content:
             normalized = connector.to_normalized_dict(conn)
             print(json.dumps(normalized, indent=2))
-            
+
     except ValueError as e:
         logger.error(f"Configuration error: {e}")
         print(f"\nError: {e}")
