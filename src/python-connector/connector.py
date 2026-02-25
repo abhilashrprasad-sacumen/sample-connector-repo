@@ -324,7 +324,7 @@ def main():
         # Fetch connectors
         response = connector.fetch_connectors()
         
-        print(f"\n{'='*60}")
+        print(f"{'='*60}")
         print("QUALYS AWS CONNECTORS")
         print(f"{'='*60}")
         print(f"Total Connectors: {response.pagination.total_elements}")
@@ -344,7 +344,7 @@ def main():
             print()
         
         # Export as normalized dict (using baseline schema field names)
-        print(f"\n{'='*60}")
+        print(f"{'='*60}")
         print("NORMALIZED OUTPUT (Baseline Schema Format)")
         print(f"{'='*60}")
         for conn in response.connectors:
