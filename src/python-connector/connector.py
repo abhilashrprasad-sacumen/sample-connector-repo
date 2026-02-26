@@ -33,6 +33,8 @@ class PollingFrequency:
     """Polling frequency configuration for a connector."""
     hours: int = 0
     minutes: int = 0
+    # NOT in baseline_schema.json — new sub-field added by API
+    seconds: int = 0  # Actual API field: seconds
 
 
 @dataclass
@@ -59,12 +61,15 @@ class AWSConnector:
     base_account_id: str  # Actual API field: baseAccountId
     external_id: str  # Actual API field: externalId
     arn: str
-    # MISSING FIELDS from actual API:
-    # - nextSyncedOn
-    # - remediationEnabled
-    # - qualysTags
-    # - portalConnectorUuid
-    # - isPortalConnector
+    # --- Fields MISSING from baseline_schema.json (present in actual API) ---
+    next_synced_on: str = ""           # Actual API field: nextSyncedOn
+    remediation_enabled: bool = False  # Actual API field: remediationEnabled
+    qualys_tags: List[str] = field(default_factory=list)  # Actual API field: qualysTags
+    portal_connector_uuid: str = ""    # Actual API field: portalConnectorUuid
+    is_portal_connector: bool = False  # Actual API field: isPortalConnector
+    # --- Brand-new fields NOT in baseline_schema.json and not previously documented ---
+    account_alias: str = ""            # Actual API field: accountAlias
+    region_code: str = ""              # Actual API field: regionCode
 
 
 @dataclass
@@ -75,6 +80,8 @@ class PaginationInfo:
     total_pages: int  # Actual API field: totalPages
     total_elements: int  # Actual API field: totalElements
     number_of_elements: int  # Actual API field: numberOfElements
+    # NOT in baseline_schema.json — new pagination field
+    sort_by: str = ""  # Actual API field: sortBy
 
 
 @dataclass
@@ -85,6 +92,9 @@ class ConnectorResponse:
     is_first: bool
     is_last: bool
     is_empty: bool
+    # NOT in baseline_schema.json — new response metadata fields
+    api_version: str = ""   # Actual API field: apiVersion
+    request_id: str = ""    # Actual API field: requestId
 
 
 class QualysAWSConnector:
@@ -125,7 +135,9 @@ class QualysAWSConnector:
         freq_data = data.get("polling_frequency", data.get("pollingFrequency", {}))
         return PollingFrequency(
             hours=freq_data.get("hours", 0),
-            minutes=freq_data.get("minutes", 0)
+            minutes=freq_data.get("minutes", 0),
+            # NOT in baseline — new sub-field
+            seconds=freq_data.get("seconds", 0)
         )
     
     def _parse_connector(self, data: Dict[str, Any]) -> AWSConnector:
@@ -161,13 +173,16 @@ class QualysAWSConnector:
             base_account_id=data.get("base_account_id", data.get("baseAccountId", "")),
             # Using 'external_id' but API returns 'externalId'
             external_id=data.get("external_id", data.get("externalId", "")),
-            arn=data.get("arn", "")
-            # MISSING FIELDS that exist in actual API but not captured:
-            # - nextSyncedOn
-            # - remediationEnabled
-            # - qualysTags
-            # - portalConnectorUuid
-            # - isPortalConnector
+            arn=data.get("arn", ""),
+            # --- Fields NOT in baseline_schema.json (present in actual API) ---
+            next_synced_on=data.get("nextSyncedOn", ""),
+            remediation_enabled=data.get("remediationEnabled", False),
+            qualys_tags=data.get("qualysTags", []),
+            portal_connector_uuid=data.get("portalConnectorUuid", ""),
+            is_portal_connector=data.get("isPortalConnector", False),
+            # --- Brand-new fields not in baseline_schema.json ---
+            account_alias=data.get("accountAlias", ""),
+            region_code=data.get("regionCode", "")
         )
     
     def _parse_pagination(self, data: Dict[str, Any]) -> PaginationInfo:
@@ -177,6 +192,7 @@ class QualysAWSConnector:
         Uses baseline schema field names which differ from actual API response.
         """
         pageable = data.get("pageable", {})
+        sort_data = pageable.get("sort", data.get("sort", {}))
         return PaginationInfo(
             # Using 'page_number' but API returns 'pageNumber'
             page_number=pageable.get("page_number", pageable.get("pageNumber", 0)),
@@ -187,7 +203,9 @@ class QualysAWSConnector:
             # Using 'total_elements' but API returns 'totalElements'
             total_elements=data.get("total_elements", data.get("totalElements", 0)),
             # Using 'number_of_elements' but API returns 'numberOfElements'
-            number_of_elements=data.get("number_of_elements", data.get("numberOfElements", 0))
+            number_of_elements=data.get("number_of_elements", data.get("numberOfElements", 0)),
+            # NOT in baseline_schema.json — new sort field
+            sort_by=sort_data.get("sortBy", "")
         )
     
     def fetch_connectors(self, page: int = 0, page_size: int = 50) -> ConnectorResponse:
@@ -244,7 +262,10 @@ class QualysAWSConnector:
             pagination=pagination,
             is_first=data.get("first", True),
             is_last=data.get("last", True),
-            is_empty=data.get("empty", False)
+            is_empty=data.get("empty", False),
+            # NOT in baseline_schema.json — new response-level metadata fields
+            api_version=data.get("apiVersion", ""),
+            request_id=data.get("requestId", "")
         )
     
     def get_all_connectors(self) -> List[AWSConnector]:
@@ -290,6 +311,7 @@ class QualysAWSConnector:
         
         This uses the BASELINE SCHEMA field names (snake_case) which differ
         from the actual API response (camelCase). CARE should detect this mismatch.
+        Fields prefixed with # NOT-IN-BASELINE are beyond the baseline schema.
         """
         return {
             "name": connector.name,
@@ -305,13 +327,21 @@ class QualysAWSConnector:
             "is_disabled": connector.is_disabled,  # Should be 'isDisabled'
             "polling_frequency": {  # Should be 'pollingFrequency'
                 "hours": connector.polling_frequency.hours,
-                "minutes": connector.polling_frequency.minutes
+                "minutes": connector.polling_frequency.minutes,
+                "seconds": connector.polling_frequency.seconds  # NOT-IN-BASELINE
             },
             "error": connector.error,
             "base_account_id": connector.base_account_id,  # Should be 'baseAccountId'
             "external_id": connector.external_id,  # Should be 'externalId'
-            "arn": connector.arn
-            # MISSING: nextSyncedOn, remediationEnabled, qualysTags, portalConnectorUuid, isPortalConnector
+            "arn": connector.arn,
+            # --- Fields NOT in baseline_schema.json ---
+            "next_synced_on": connector.next_synced_on,          # NOT-IN-BASELINE (nextSyncedOn)
+            "remediation_enabled": connector.remediation_enabled, # NOT-IN-BASELINE (remediationEnabled)
+            "qualys_tags": connector.qualys_tags,                 # NOT-IN-BASELINE (qualysTags)
+            "portal_connector_uuid": connector.portal_connector_uuid,  # NOT-IN-BASELINE (portalConnectorUuid)
+            "is_portal_connector": connector.is_portal_connector, # NOT-IN-BASELINE (isPortalConnector)
+            "account_alias": connector.account_alias,             # NOT-IN-BASELINE (accountAlias)
+            "region_code": connector.region_code                  # NOT-IN-BASELINE (regionCode)
         }
 
 
@@ -331,6 +361,12 @@ def main():
         print(f"Page: {response.pagination.page_number + 1} of {response.pagination.total_pages}")
         print(f"{'='*60}\n")
         
+        if response.api_version:
+            print(f"API Version: {response.api_version}")   # NOT-IN-BASELINE
+        if response.request_id:
+            print(f"Request ID:  {response.request_id}")    # NOT-IN-BASELINE
+        print()
+
         for conn in response.connectors:
             print(f"Name: {conn.name}")
             print(f"  Connector ID: {conn.connector_id}")
@@ -339,8 +375,16 @@ def main():
             print(f"  Total Assets: {conn.total_assets}")
             print(f"  AWS Account ID: {conn.aws_account_id}")
             print(f"  Last Synced: {conn.last_synced_on}")
+            print(f"  Next Synced: {conn.next_synced_on}")   # NOT-IN-BASELINE
             print(f"  Is Disabled: {conn.is_disabled}")
             print(f"  ARN: {conn.arn}")
+            print(f"  Account Alias: {conn.account_alias}")  # NOT-IN-BASELINE
+            print(f"  Region Code: {conn.region_code}")      # NOT-IN-BASELINE
+            print(f"  Remediation Enabled: {conn.remediation_enabled}")  # NOT-IN-BASELINE
+            print(f"  Is Portal Connector: {conn.is_portal_connector}")  # NOT-IN-BASELINE
+            print(f"  Portal Connector UUID: {conn.portal_connector_uuid}")  # NOT-IN-BASELINE
+            if conn.qualys_tags:
+                print(f"  Qualys Tags: {', '.join(conn.qualys_tags)}")  # NOT-IN-BASELINE
             print()
         
         # Export as normalized dict (using baseline schema field names)
