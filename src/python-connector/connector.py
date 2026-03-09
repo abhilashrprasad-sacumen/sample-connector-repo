@@ -197,7 +197,6 @@ class QualysAWSConnector:
             # Using 'page_number' but API returns 'pageNumber'
             page_number=pageable.get("page_number", pageable.get("pageNumber", 0)),
             # Using 'page_size' but API returns 'pageSize'
-            page_size=pageable.get("page_size", pageable.get("pageSize", 0)),
             # Using 'total_pages' but API returns 'totalPages'
             total_pages=data.get("total_pages", data.get("totalPages", 0)),
             # Using 'total_elements' but API returns 'totalElements'
