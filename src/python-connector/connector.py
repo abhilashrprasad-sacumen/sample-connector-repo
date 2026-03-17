@@ -150,27 +150,27 @@ class QualysAWSConnector:
         return AWSConnector(
             name=data.get("name", ""),
             # Using 'connector_id' but API returns 'connectorId'
-            connector_id=data.get("connector_id", data.get("connectorId", "")),
+            connector_id=data.get("connectorId", data.get("connectorId", "")),
             description=data.get("description", ""),
             provider=data.get("provider", ""),
             # Using 'status' but API returns 'state' (FIELD RENAMED)
             status=data.get("status", data.get("state", "")),
             # Using 'total_assets' but API returns 'totalAssets'
-            total_assets=data.get("total_assets", data.get("totalAssets", 0)),
+            total_assets=data.get("totalAssets", data.get("totalAssets", 0)),
             # Using 'last_synced_on' but API returns 'lastSyncedOn'
-            last_synced_on=data.get("last_synced_on", data.get("lastSyncedOn", "")),
+            last_synced_on=data.get("lastSyncedOn", data.get("lastSyncedOn", "")),
             # Using 'is_gov_cloud' but API returns 'isGovCloud'
-            is_gov_cloud=data.get("is_gov_cloud", data.get("isGovCloud", False)),
+            is_gov_cloud=data.get("isGovCloud", data.get("isGovCloud", False)),
             # Using 'is_china_region' but API returns 'isChinaRegion'
-            is_china_region=data.get("is_china_region", data.get("isChinaRegion", False)),
+            is_china_region=data.get("isChinaRegion", data.get("isChinaRegion", False)),
             # Using 'aws_account_id' but API returns 'awsAccountId'
-            aws_account_id=data.get("aws_account_id", data.get("awsAccountId", "")),
+            aws_account_id=data.get("awsAccountId", data.get("awsAccountId", "")),
             # Using 'is_disabled' but API returns 'isDisabled'
-            is_disabled=data.get("is_disabled", data.get("isDisabled", False)),
+            is_disabled=data.get("isDisabled", data.get("isDisabled", False)),
             polling_frequency=self._parse_polling_frequency(data),
             error=data.get("error", ""),
             # Using 'base_account_id' but API returns 'baseAccountId'
-            base_account_id=data.get("base_account_id", data.get("baseAccountId", "")),
+            base_account_id=data.get("baseAccountId", data.get("baseAccountId", ""))
             # Using 'external_id' but API returns 'externalId'
             external_id=data.get("external_id", data.get("externalId", "")),
             arn=data.get("arn", ""),
