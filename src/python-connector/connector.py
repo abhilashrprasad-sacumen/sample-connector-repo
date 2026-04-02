@@ -12,6 +12,17 @@ Intentional Differences:
 2. 'status' field is used instead of actual 'state' field
 3. Missing fields: nextSyncedOn, remediationEnabled, qualysTags, portalConnectorUuid, isPortalConnector
 """
+# Test lines for CARE field removal functionality
+removed_field_1 = data.get('removed_field_1', 'default')  # This should be commented out
+removed_field_2 = data['removed_field_2']  # This should be commented out (direct access)
+legacy_config = data.get('legacy_config', {})  # This should be commented out
+
+# Process the removed fields
+if removed_field_1:
+    print(f'Processing field 1: {removed_field_1}')
+
+if legacy_config and 'enabled' in legacy_config:
+    print('Legacy config is enabled')
 
 import json
 import logging
