@@ -132,7 +132,6 @@ class QualysAWSConnector:
         Uses baseline schema field names (snake_case) but actual API returns camelCase.
         """
         # NOTE: Baseline schema expects 'polling_frequency' but API returns 'pollingFrequency'
-        freq_data = data.get("polling_frequency", data.get("pollingFrequency", {}))
         return PollingFrequency(
             hours=freq_data.get("hours", 0),
             minutes=freq_data.get("minutes", 0),
@@ -148,38 +147,18 @@ class QualysAWSConnector:
         from the actual API response. CARE should detect and fix these mismatches.
         """
         return AWSConnector(
-            name=data.get("name", ""),
             # Using 'connector_id' but API returns 'connectorId'
-            connector_id=data.get("connector_id", data.get("connectorId", "")),
-            description=data.get("description", ""),
-            provider=data.get("provider", ""),
             # Using 'status' but API returns 'state' (FIELD RENAMED)
-            status=data.get("status", data.get("state", "")),
             # Using 'total_assets' but API returns 'totalAssets'
-            total_assets=data.get("total_assets", data.get("totalAssets", 0)),
             # Using 'last_synced_on' but API returns 'lastSyncedOn'
-            last_synced_on=data.get("last_synced_on", data.get("lastSyncedOn", "")),
             # Using 'is_gov_cloud' but API returns 'isGovCloud'
-            is_gov_cloud=data.get("is_gov_cloud", data.get("isGovCloud", False)),
             # Using 'is_china_region' but API returns 'isChinaRegion'
-            is_china_region=data.get("is_china_region", data.get("isChinaRegion", False)),
             # Using 'aws_account_id' but API returns 'awsAccountId'
-            aws_account_id=data.get("aws_account_id", data.get("awsAccountId", "")),
             # Using 'is_disabled' but API returns 'isDisabled'
-            is_disabled=data.get("is_disabled", data.get("isDisabled", False)),
             polling_frequency=self._parse_polling_frequency(data),
-            error=data.get("error", ""),
             # Using 'base_account_id' but API returns 'baseAccountId'
-            base_account_id=data.get("base_account_id", data.get("baseAccountId", "")),
             # Using 'external_id' but API returns 'externalId'
-            external_id=data.get("external_id", data.get("externalId", "")),
-            arn=data.get("arn", ""),
             # --- Fields NOT in baseline_schema.json (present in actual API) ---
-            next_synced_on=data.get("nextSyncedOn", ""),
-            remediation_enabled=data.get("remediationEnabled", False),
-            qualys_tags=data.get("qualysTags", []),
-            portal_connector_uuid=data.get("portalConnectorUuid", ""),
-            is_portal_connector=data.get("isPortalConnector", False),
             # --- Brand-new fields not in baseline_schema.json ---
             account_alias=data.get("accountAlias", ""),
             region_code=data.get("regionCode", "")
