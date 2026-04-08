@@ -154,7 +154,6 @@ class QualysAWSConnector:
             description=data.get("description", ""),
             provider=data.get("provider", ""),
             # Using 'status' but API returns 'state' (FIELD RENAMED)
-            status=data.get("status", data.get("state", "")),
             # Using 'total_assets' but API returns 'totalAssets'
             total_assets=data.get("total_assets", data.get("totalAssets", 0)),
             # Using 'last_synced_on' but API returns 'lastSyncedOn'
